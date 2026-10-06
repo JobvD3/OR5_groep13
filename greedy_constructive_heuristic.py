@@ -28,7 +28,7 @@ def import_data(month : str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]|
     orders["Penalty_order"] = [0.0 for i in range(len(orders))]
 
     #Voegt een column toe om aan te geven dat de order klaar is
-    orders["Done"] = [0 for i in range(len(orders))] 
+    orders["Done"] = [False for i in range(len(orders))] 
 
     #Voegt een column toe die aangeft welke machine het heeft gedaan
     orders["Machine"] = ["None" for i in range(len(orders))] 
@@ -74,14 +74,14 @@ def setup_time_machine(machines, setups, machine) -> list:
     """
     df_setup_time = setups[setups["From colour"] == machines.Colour[machines.Machine == machine].iloc[0]].copy()
     df_setup_time = df_setup_time.sort_values("Setup time")
-
+    #print(df_setup_time)
     key = list(df_setup_time["To colour"])
     value = list(df_setup_time["Setup time"])
     setup_time = dict(zip(key, value))
     return setup_time
 
 def choose_order(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.DataFrame,
-                  machine : str) -> str:
+                  machine : str) -> pd.Series:
     """
     Chooses the order with the lowest potential penalty, if multiple orders have the lowest 
     potential penalty, then choose the order with the highest penalty per time unit, if 
@@ -94,13 +94,14 @@ def choose_order(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.Dat
 
     df = orders.loc[orders.Done == False].copy()
     setup_time = setup_time_machine(machines, setups, machine)
-    machine = machines.loc[machines.Machine == machine].copy()
+    #print(setup_time)
+    df_machine = machines.loc[machines.Machine == machine].copy()
 
     for row in df.iterrows():
         order = row[1]
         time_colour_change = setup_time[order.Colour]
-        order.Start = machine.Total_time.iloc[0] + time_colour_change
-        order.End = order.Start + order.Surface/machine.Speed.iloc[0]
+        order.Start = df_machine.Total_time.iloc[0] + time_colour_change
+        order.End = order.Start + order.Surface/df_machine.Speed.iloc[0]
         if order.End > order.Deadline:
             order.Penalty_order = (order.End - order.Deadline)*order.Penalty
         else:
@@ -125,10 +126,38 @@ def choose_order(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.Dat
     else:
         choice = choices.Order.iloc[0]
 
-    return choice
-                            
+    choices.loc[choices.Order == choice, "Machine"] = machine
+    choices.loc[choices.Order == choice, "Done"] = True
+    for row in choices.iterrows():
+        s_choice = row[1]
+    return s_choice
+
+def update_plan(orders : pd.DataFrame, machines : pd.DataFrame, s_choice : pd.Series) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Updates the orders and machines
+    """
+    df_orders = orders.copy()
+    df_machines = machines.copy()
+
+    df_orders.loc[df_orders.Order == s_choice.Order] = list(s_choice)
+    df_machines.loc[df_machines.Machine == s_choice.Machine, "Total_time"] = s_choice.End
+    df_machines.loc[df_machines.Machine == s_choice.Machine, "Colour"] = s_choice.Colour
+    return df_orders, df_machines 
+
+def greedy_constructive(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    df_orders = orders.copy()
+    df_machines = machines.copy()
+
+    while len(df_orders[df_orders.Done == False]) > 0:
+        machine = choose_machine(df_machines)
+        s_choice = choose_order(df_orders, df_machines, setups, machine)
+        [df_orders, df_machines] = update_plan(df_orders, df_machines, s_choice)
+    plan_orders = df_orders.sort_values(by = ["Machine", "Start"])
+    plan_machines = df_machines.sort_values("Machine")
+    return plan_orders, plan_machines
 
 [a, b, c] = import_data("September")
-m = choose_machine(b)
-df = choose_order(a,b,c,m)
-print(df)
+[plan, plan_machines] = greedy_constructive(a, b, c)
+print(plan_machines)
+print(plan)
+print(c)
