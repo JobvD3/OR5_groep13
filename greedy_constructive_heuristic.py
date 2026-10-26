@@ -60,7 +60,7 @@ def choose_machine(machines : pd.DataFrame) -> str:
     returns the choosen machine as a string
     """
     machine = machines.sort_values(by = ["Total_time", "Speed"],
-                                    ascending = [True, False]).Machine.iloc[0]
+                                    ascending = [True, True]).Machine.iloc[0]
     return machine
 
 def setup_time_machine(machines, setups, machine) -> list:
@@ -108,7 +108,9 @@ def choose_order(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.Dat
             order.Penalty_order = 0
         df.loc[df.Order == order.Order] = list(order)
 
-    df = df.sort_values(by = ["Penalty_order", "Penalty", "Deadline"], ascending = [False, False, True])
+    df = df.sort_values(by = ["End", "Penalty_order", "Penalty"], ascending = [True, False, False]) #werkt het best score = 2899.3333333333335
+    #df = df.sort_values(by = ["Penalty_order", "Penalty", "Deadline"], ascending = [False, False, True]) #score = 4960.75
+    
     choices = df.loc[df.Penalty_order == df.Penalty_order.iloc[0]]
     if len(choices) > 1:
         choices = choices.loc[choices.Penalty == choices.Penalty.iloc[0]]
@@ -145,6 +147,12 @@ def update_plan(orders : pd.DataFrame, machines : pd.DataFrame, s_choice : pd.Se
     return df_orders, df_machines 
 
 def greedy_constructive(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    This function runs the greedy constructive heuristic until all tasks are assigned
+
+    Returns a plan for the orders and the information of the machines
+    """
+    
     df_orders = orders.copy()
     df_machines = machines.copy()
 
@@ -160,4 +168,4 @@ def greedy_constructive(orders : pd.DataFrame, machines : pd.DataFrame, setups :
 [plan, plan_machines] = greedy_constructive(a, b, c)
 print(plan_machines)
 print(plan)
-print(c)
+print(sum(plan.Penalty_order))
