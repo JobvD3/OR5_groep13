@@ -2,7 +2,6 @@
 This file contains the nessesery functions for the greedy constructive rule
 """
 
-import numpy as np
 import pandas as pd
 
 
@@ -25,6 +24,12 @@ def import_data(month : str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]|
     else:
         print("nope")
         return
+
+    #Voegt een column toe voor de tijd van het verven
+    orders["Duration"] = [0.0 for i in range(len(orders))] 
+
+    #Voegt een column too voor de kleur wissel tijd
+    orders["Setup_time"] = [0.0 for i in range(len(orders))] 
 
     #Voegt een column toe voor de start tijd
     orders["Start"] = [0.0 for i in range(len(orders))] 
@@ -125,6 +130,8 @@ def choose_order(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.Dat
     for row in df.iterrows():
         order = row[1]
         time_colour_change = setup_time[order.Colour]
+        order.Duration = order.Surface/df_machine.Speed.iloc[0]
+        order.Setup_time = time_colour_change
         order.Start = df_machine.Total_time.iloc[0] + time_colour_change
         order.End = order.Start + order.Surface/df_machine.Speed.iloc[0]
         if order.End > order.Deadline:
@@ -204,9 +211,3 @@ def greedy_constructive(orders : pd.DataFrame, machines : pd.DataFrame, setups :
     plan_orders = df_orders.sort_values(by = ["Machine", "Start"])
     plan_machines = df_machines.sort_values("Machine")
     return plan_orders, plan_machines
-
-[a, b, c] = import_data("September")
-[plan, plan_machines] = greedy_constructive(a, b, c)
-print(plan_machines)
-print(plan)
-print(sum(plan.Penalty_order))
