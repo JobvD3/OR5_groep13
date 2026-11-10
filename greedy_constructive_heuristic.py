@@ -9,6 +9,14 @@ import pandas as pd
 def import_data(month : str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]|None:
     """
     Imports the data of the requested month and adds essential columns
+
+    Args:
+        month(str): the month of the chosen data
+
+    Returns:
+        A pandas.DataFrame of the orders of the month
+        A pandas.DataFrame of the machines of the month
+        A pandas.DataFrame with the setups of the month
     """
     if month.lower() == "september":
         orders = pd.read_excel("PaintShop - September 2026.xlsx", sheet_name=0)
@@ -57,20 +65,30 @@ def choose_machine(machines : pd.DataFrame) -> str:
     Chooses the first availible machine, if multiple machines are availible at the same time,
     pick the fastest one of them.
 
-    returns the choosen machine as a string
+    Args:
+        machines(pandas.DataFrame): The dataframe with information about the machines
+
+    Returns:
+        The choosen machine as a string
     """
     machine = machines.sort_values(by = ["Total_time", "Speed"],
                                     ascending = [True, True]).Machine.iloc[0]
     return machine
 
-def setup_time_machine(machines, setups, machine) -> list:
+def setup_time_machine(machines : pd.DataFrame, setups : pd.DataFrame, machine : str) -> dict:
     """
     Makes a dictionary where the keys are the colours a machine could change to and where the
     values are the setup times of the colours.
 
     The dictionary is sorted by the setup time in ascending order
 
-    Returns a dictionary
+    Args:
+        machines(pandas.DataFrame): The dataframe with information about the machines
+        setups(pandas.DataFrame): The dataframe with information about the setups
+        machine(str): The chooses machine
+
+    Returns: 
+        A dictionary where the keys are the colors and the values are the setup time for the color switch
     """
     df_setup_time = setups[setups["From colour"] == machines.Colour[machines.Machine == machine].iloc[0]].copy()
     df_setup_time = df_setup_time.sort_values("Setup time")
@@ -89,7 +107,14 @@ def choose_order(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.Dat
     deadline, if there are multiple with the lowest deadline choose the one with the lowest
     setup time.
 
-    Returns the choosen order
+    Args:
+        orderds(pandas.DataFrame): The dataframe with information about the orders
+        machines(pandas.DataFrame): The dataframe with information about the machines
+        setups(pandas.DataFrame): The dataframe with information about the setups
+        machine(str): The chooses machine
+
+    Returns:
+        A pandas.Series with information of the choosen order
     """
 
     df = orders.loc[orders.Done == False].copy()
@@ -137,6 +162,15 @@ def choose_order(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.Dat
 def update_plan(orders : pd.DataFrame, machines : pd.DataFrame, s_choice : pd.Series) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Updates the orders and machines
+
+    Args:
+        orderds(pandas.DataFrame): The dataframe with information about the orders
+        machines(pandas.DataFrame): The dataframe with information about the machines
+        s_choice(pandas.Series): The pd.Series with information of the choosen order
+
+    Returns:
+        A pandas.DataFrame with updated information of the orders
+        A pandas.DataFrame with updated information of the machines
     """
     df_orders = orders.copy()
     df_machines = machines.copy()
@@ -150,7 +184,14 @@ def greedy_constructive(orders : pd.DataFrame, machines : pd.DataFrame, setups :
     """
     This function runs the greedy constructive heuristic until all tasks are assigned
 
-    Returns a plan for the orders and the information of the machines
+    Args:
+        orderds(pandas.DataFrame): The dataframe with information about the orders
+        machines(pandas.DataFrame): The dataframe with information about the machines
+        setups(pandas.DataFrame): The dataframe with information about the setups
+
+    Returns:
+        A plan for the orders as a pandas.DataFrame
+        The information of the machines as a pandas.DataFrame
     """
     
     df_orders = orders.copy()
