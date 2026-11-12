@@ -1,4 +1,4 @@
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 import greedy_constructive_heuristic as gch
 import simulated_annealing_meta_heuristic as sam
@@ -13,4 +13,4 @@ import result_functions as rf
 gantt = rf.make_gantt_chart(orders2)
 print(orders2)
 print(order2_score)
-gantt.imshow()
+plt.savefig("Gantttt.png")

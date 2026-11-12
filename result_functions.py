@@ -25,20 +25,23 @@ def make_gantt_chart(solution : pd.DataFrame):
 
     fig, gnt = plt.subplots()
 
-    print(place_machine.values())
+    gnt.set_title("Gantt-Chart of order sequence")
+    gnt.set_xlabel("Time")
+    gnt.set_ylabel("Machine")
+    
     gnt.set_yticks(list(place_machine.values()))
     gnt.set_yticklabels(list(place_machine.keys()))
 
     for i in df.iterrows():
         row = i[1]
-        print(row["Colour"])
         if row["Setup_time"] > 0:
             start = row["Start"] - row["Setup_time"]
             gnt.broken_barh([(start, row["Setup_time"])], (place_machine[row["Machine"]] - 5, 10), facecolor="gray", edgecolor="k")
 
         gnt.broken_barh([(row["Start"], row["Duration"])], (place_machine[row["Machine"]] - 5, 10), facecolor=row["Colour"].lower(), edgecolor="k")
+        gnt.text(x=row["Start"] + row["Duration"]/2, y=place_machine[row["Machine"]], s=row["Order"], ha="center", va="center", size="xx-small")
 
     fig.set_figheight(1)
     fig.set_figwidth(10)
-
-    return gnt
+    
+    return fig
