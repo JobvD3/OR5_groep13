@@ -13,4 +13,3 @@ import result_functions as rf
 gantt = rf.make_gantt_chart(orders2)
 print(orders2)
 print(order2_score)
-plt.savefig("Gantttt.png")

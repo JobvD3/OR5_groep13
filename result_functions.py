@@ -43,5 +43,5 @@ def make_gantt_chart(solution : pd.DataFrame):
 
     fig.set_figheight(1)
     fig.set_figwidth(10)
-    
+    plt.show()
     return fig
