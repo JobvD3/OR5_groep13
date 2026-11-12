@@ -54,8 +54,8 @@ def calculate_plan(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.D
             
             duration.append(order["Surface"]/speed)
             setup_time.append(get_setup_time(previous_color, order["Colour"], setups))
-            end.append(start[-1] + duration[-1])
             start[-1] += setup_time[-1]
+            end.append(start[-1] + duration[-1])
             start.append(end[-1])
             if end[-1] > order["Deadline"]:
                 penalty.append((end[-1] - order["Deadline"])*order["Penalty"])
