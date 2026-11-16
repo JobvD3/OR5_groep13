@@ -122,7 +122,7 @@ def switch_rows(rowA : int, rowB : int, dataframe : pd.DataFrame) -> pd.DataFram
     return df
 
 
-def simulated_annealing(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.DataFrame, initial_q=1000, max_iterations=1000000, nmr_it_q=1000, alpha=0.9) -> pd.DataFrame:
+def simulated_annealing(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.DataFrame, initial_q=1000, max_iterations=1000000, nmr_it_q=1000, alpha=0.9) -> tuple[pd.DataFrame, list, list]:
     """
     This function will perform a simulated annealing over the selected dataframe
 
@@ -137,6 +137,8 @@ def simulated_annealing(orders : pd.DataFrame, machines : pd.DataFrame, setups :
 
     Returns:
         Hopefully an improved solution...
+        A list with all accepted solutions
+        A list with the best solution at an iteration
     """
     df = orders.copy()
     df = df.sort_values(["Machine", "Start"], ascending=[True, True])
@@ -147,6 +149,9 @@ def simulated_annealing(orders : pd.DataFrame, machines : pd.DataFrame, setups :
 
     best = [df, sum(df["Penalty_order"])]
     current = best
+
+    best_list = [best]
+    current_list = [current]
 
     it = 0
     while it <= max_iterations:
@@ -171,10 +176,15 @@ def simulated_annealing(orders : pd.DataFrame, machines : pd.DataFrame, setups :
                         new_current = True
                         if current[1] <= best[1]:
                             best = current
+
+                    current_list.append(current)
+                    best_list.append(best)
+
+                    if new_current == True:
                         break
 
                 if new_current == True:
                     break
 
-    return best
+    return best, current_list, best_list
 
