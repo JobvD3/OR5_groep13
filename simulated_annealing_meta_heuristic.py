@@ -2,6 +2,7 @@
 Here you will find the functions for simulated annealing
 """
 
+import math as m
 import numpy as np
 import pandas as pd
 
@@ -137,6 +138,7 @@ def simulated_annealing(orders : pd.DataFrame, machines : pd.DataFrame, setups :
 
     Returns:
         Hopefully an improved solution...
+        A list with all candidate solutions
         A list with all accepted solutions
         A list with the best solution at an iteration
     """
@@ -150,8 +152,9 @@ def simulated_annealing(orders : pd.DataFrame, machines : pd.DataFrame, setups :
     best = [df, sum(df["Penalty_order"])]
     current = best
 
-    best_list = [best]
-    current_list = [current]
+    best_list = [best[1]]
+    current_list = [current[1]]
+    candidate_list = [current[1]]
 
     it = 0
     while it <= max_iterations:
@@ -170,15 +173,18 @@ def simulated_annealing(orders : pd.DataFrame, machines : pd.DataFrame, setups :
                     it += 1
                     if it%nmr_it_q == 0:
                         q = q*alpha
+
+                    d_obj = current[1] - new[1]
                     
-                    if new[1] <= current[1]:
+                    if (d_obj >= 0) or m.e**(d_obj/q) > rng.random():
                         current = new
                         new_current = True
                         if current[1] <= best[1]:
                             best = current
 
-                    current_list.append(current)
-                    best_list.append(best)
+                    candidate_list.append(new[1])
+                    current_list.append(current[1])
+                    best_list.append(best[1])
 
                     if new_current == True:
                         break
@@ -186,5 +192,4 @@ def simulated_annealing(orders : pd.DataFrame, machines : pd.DataFrame, setups :
                 if new_current == True:
                     break
 
-    return best, current_list, best_list
-
+    return best, candidate_list, current_list, best_list
