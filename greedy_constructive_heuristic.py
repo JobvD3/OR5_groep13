@@ -21,6 +21,12 @@ def import_data(month : str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]|
         orders = pd.read_excel("PaintShop - September 2026.xlsx", sheet_name=0)
         machines = pd.read_excel("PaintShop - September 2026.xlsx", sheet_name=1)
         setups = pd.read_excel("PaintShop - September 2026.xlsx", sheet_name=2)
+    
+    elif month.lower() == "november":
+        orders = pd.read_excel("PaintShop - November 2026.xlsx", sheet_name=0)
+        machines = pd.read_excel("PaintShop - November 2026.xlsx", sheet_name=1)
+        setups = pd.read_excel("PaintShop - November 2026.xlsx", sheet_name=2)
+    
     else:
         print("nope")
         return
@@ -149,10 +155,11 @@ def choose_order(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.Dat
         if len(choices) > 1:
             choices = choices.loc[choices.Deadline == choices.Deadline.iloc[0]]
             if len(choices) > 1:
-                for colour in list(setup_time.keys):
+                for colour in list(setup_time.keys()):
                     choice = choices.loc[choices.Colour == colour]
-                    if len(choice > 0):
+                    if len(choice.index) > 0:
                         choice = choice.Order.iloc[0]
+                        break
             else:
                 choice = choices.Order.iloc[0]
         else:
@@ -160,6 +167,7 @@ def choose_order(orders : pd.DataFrame, machines : pd.DataFrame, setups : pd.Dat
     else:
         choice = choices.Order.iloc[0]
 
+    choices = choices.loc[choices.Order == choice]
     choices.loc[choices.Order == choice, "Machine"] = machine
     choices.loc[choices.Order == choice, "Done"] = True
     for row in choices.iterrows():
@@ -207,6 +215,7 @@ def greedy_constructive(orders : pd.DataFrame, machines : pd.DataFrame, setups :
     while len(df_orders[df_orders.Done == False]) > 0:
         machine = choose_machine(df_machines)
         s_choice = choose_order(df_orders, df_machines, setups, machine)
+        print(s_choice)
         [df_orders, df_machines] = update_plan(df_orders, df_machines, s_choice)
     plan_orders = df_orders.sort_values(by = ["Machine", "Start"])
     plan_machines = df_machines.sort_values("Machine")
